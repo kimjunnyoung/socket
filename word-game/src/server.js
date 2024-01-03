@@ -16,7 +16,6 @@ const io = socketIO(server, {
 
 const PORT = process.env.PORT || 3001;
 
-
 const rooms = {};
 
 const updateRoomList = () => {
@@ -34,6 +33,23 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log(`disconnected: ${socket.id}`);
   });
+
+  socket.on('getRoomList', () => {
+    updateRoomList();
+  });
+
+  const updateRoomList = () => {
+    io.emit('roomList', Object.keys(rooms));
+  };
+
+  const removeEmptyRooms = () => {
+    Object.keys(rooms).forEach((roomName) => {
+      if (Object.keys(rooms[roomName].users).length === 0) {
+        delete rooms[roomName];
+      }
+    });
+    updateRoomList();
+  };
 
   socket.on('createRoom', (roomName) => {
     console.log(`room: ${roomName}`);
@@ -54,14 +70,32 @@ io.on('connection', (socket) => {
         startGame(roomName);
       }
     } else {
-      socket.emit('roomFull', `Room ${roomName} .`);
+      socket.emit('roomFull', `Room ${roomName} is full.`);
     }
   });
 
   socket.on('submitWord', ({ roomName, word, userNickname }) => {
     io.to(roomName).emit('updateCurrentWord', word);
   });
+
+  socket.on('leaveRoom', ({ roomName }) => {
+    if (rooms[roomName] && rooms[roomName].users[socket.id]) {
+      delete rooms[roomName].users[socket.id];
+      io.to(roomName).emit('updatePlayers', Object.values(rooms[roomName].users));
+      removeEmptyRooms();
+    }
+  });
+
+  socket.on('sendChatMessage', ({ roomName, message, userNickname }) => {
+    io.to(roomName).emit('chatMessage', { userNickname, message });
+  });
+
+  socket.on('submitWord', ({ roomName, word, userNickname }) => {
+    io.to(roomName).emit('updateCurrentWord', word);
+  });
 });
+
+updateRoomList();
 
 server.listen(PORT, () => {
   console.log(`Server ${PORT}`);
