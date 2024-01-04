@@ -22,3 +22,8 @@
   border: 1px solid #ccc;
   word-wrap: break-word;
 }
+
+.chat-container {
+  max-height: 150px;
+  overflow-y: auto;
+}

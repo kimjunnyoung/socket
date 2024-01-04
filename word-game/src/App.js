@@ -8,8 +8,6 @@ import {
   Typography,
   Container,
   Paper,
-  IconButton,
-  Avatar,
 } from '@mui/material';
 import { Send as SendIcon, Add as AddIcon, ExitToApp as ExitIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import './App.css';
@@ -52,7 +50,16 @@ const App = () => {
       setChatMessages((prevMessages) => [...prevMessages, message]);
     });
 
+    const handleBeforeUnload = (event) => {
+      const message = "위험해.";
+      event.returnValue = message;
+      return message;
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       socket.disconnect();
     };
   }, []);
@@ -98,7 +105,7 @@ const App = () => {
       <Paper elevation={3} style={{ padding: '20px', marginTop: '20px' }}>
         {!selectedRoom ? (
           <div>
-            <Typography variant="h4">진짜 하기싫다</Typography>
+            <Typography variant="h4">새로고침 하지마세요.<br />큰일나요!!!</Typography>
             <TextField
               label="제목"
               value={roomTitle}
